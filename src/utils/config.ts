@@ -320,6 +320,10 @@ export const SERVICES: Readonly<Readonly<TranslateService>[]> = <const>[
     type: "word",
     id: "collinsdict",
   },
+  {
+    type: "word",
+    id: "cambridgedict",
+  },
 ];
 
 export function getService(id: string) {

@@ -82,6 +82,9 @@ export class TranslationServices {
     import("./youdaozhiyun").then(
       (e) => (this.youdaozhiyun = new TranslateTaskRunner(e.default)),
     );
+    import("./cambridgedict").then(
+      (e) => (this.cambridgedict = new TranslateTaskRunner(e.default)),
+    );
   }
 
   public async runTranslationTask(
