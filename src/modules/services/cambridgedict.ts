@@ -50,9 +50,7 @@ function get_sense(title: string, node: HTMLElement | null | undefined): string 
 export default <TranslateTaskProcessor>async function (data) {
     const xhr = await Zotero.HTTP.request(
         "GET",
-        `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(
-            data.raw,
-        )}`,
+        `https://dictionary.cambridge.org/search/direct/?datasetsearch=english&q=${encodeURIComponent(data.raw)}`,
         {responseType: "text"},
     );
     if (xhr?.status !== 200) {

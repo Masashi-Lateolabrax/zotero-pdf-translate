@@ -493,13 +493,21 @@ function buildPanel(panel: HTMLElement, refID: string, force: boolean = false) {
                     if (!task) {
                       return;
                     }
-                    const reverseRawResult = getPref("rawResultOrder");
-                    if (!reverseRawResult) {
-                      task.raw = (ev.target as HTMLTextAreaElement).value;
+
+                    if (task.status === "success") {
+                      const id = `#${makeId(getPref("rawResultOrder") ? "resulttext" : "rawtext")}`;
+                      addTranslateTask(
+                        (panel.querySelector(id) as HTMLTextAreaElement)?.value
+                      );
                     } else {
-                      task.result = (ev.target as HTMLTextAreaElement).value;
+                      const reverseRawResult = getPref("rawResultOrder");
+                      if (!reverseRawResult) {
+                        task.raw = (ev.target as HTMLTextAreaElement).value;
+                      } else {
+                        task.result = (ev.target as HTMLTextAreaElement).value;
+                      }
+                      putTranslateTaskAtHead(task.id);
                     }
-                    putTranslateTaskAtHead(task.id);
                   },
                 },
               ],
@@ -544,13 +552,21 @@ function buildPanel(panel: HTMLElement, refID: string, force: boolean = false) {
                     if (!task) {
                       return;
                     }
-                    const reverseRawResult = getPref("rawResultOrder");
-                    if (!reverseRawResult) {
-                      task.result = (ev.target as HTMLTextAreaElement).value;
+
+                    if (task.status === "success") {
+                      const id = `#${makeId(getPref("rawResultOrder") ? "resulttext" : "rawtext")}`;
+                      addTranslateTask(
+                        (panel.querySelector(id) as HTMLTextAreaElement)?.value
+                        );
                     } else {
-                      task.raw = (ev.target as HTMLTextAreaElement).value;
+                      const reverseRawResult = getPref("rawResultOrder");
+                      if (!reverseRawResult) {
+                        task.result = (ev.target as HTMLTextAreaElement).value;
+                      } else {
+                        task.raw = (ev.target as HTMLTextAreaElement).value;
+                      }
+                      putTranslateTaskAtHead(task.id);
                     }
-                    putTranslateTaskAtHead(task.id);
                   },
                 },
               ],
