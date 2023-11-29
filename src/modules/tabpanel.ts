@@ -235,7 +235,10 @@ function buildPanel(panel: HTMLElement, refID: string, force: boolean = false) {
                     addon.hooks.onTranslate(undefined, {
                       noCheckZoteroItemLanguage: true,
                     });
-                  },
+
+                    const page_number_element = panel.querySelector(`#${makeId("history_page")}`) as HTMLDivElement;
+                    page_number_element.innerHTML = "0";
+                    },
                 },
               ],
             },
@@ -498,13 +501,21 @@ function buildPanel(panel: HTMLElement, refID: string, force: boolean = false) {
                     if (!task) {
                       return;
                     }
-                    const reverseRawResult = getPref("rawResultOrder");
-                    if (!reverseRawResult) {
-                      task.raw = (ev.target as HTMLTextAreaElement).value;
+
+                    if (task.status === "success") {
+                      const id = `#${makeId(getPref("rawResultOrder") ? "resulttext" : "rawtext")}`;
+                      addTranslateTask(
+                        (panel.querySelector(id) as HTMLTextAreaElement)?.value
+                      );
                     } else {
-                      task.result = (ev.target as HTMLTextAreaElement).value;
+                      const reverseRawResult = getPref("rawResultOrder");
+                      if (!reverseRawResult) {
+                        task.raw = (ev.target as HTMLTextAreaElement).value;
+                      } else {
+                        task.result = (ev.target as HTMLTextAreaElement).value;
+                      }
+                      putTranslateTaskAtHead(task.id);
                     }
-                    putTranslateTaskAtHead(task.id);
                   },
                 },
               ],
@@ -549,19 +560,132 @@ function buildPanel(panel: HTMLElement, refID: string, force: boolean = false) {
                     if (!task) {
                       return;
                     }
-                    const reverseRawResult = getPref("rawResultOrder");
-                    if (!reverseRawResult) {
-                      task.result = (ev.target as HTMLTextAreaElement).value;
+
+                    if (task.status === "success") {
+                      const id = `#${makeId(getPref("rawResultOrder") ? "resulttext" : "rawtext")}`;
+                      addTranslateTask(
+                        (panel.querySelector(id) as HTMLTextAreaElement)?.value
+                        );
                     } else {
-                      task.raw = (ev.target as HTMLTextAreaElement).value;
+                      const reverseRawResult = getPref("rawResultOrder");
+                      if (!reverseRawResult) {
+                        task.result = (ev.target as HTMLTextAreaElement).value;
+                      } else {
+                        task.raw = (ev.target as HTMLTextAreaElement).value;
+                      }
+                      putTranslateTaskAtHead(task.id);
                     }
-                    putTranslateTaskAtHead(task.id);
                   },
                 },
               ],
             },
           ],
         },
+
+        {
+          tag: "hbox",
+          id: makeId("history"),
+          attributes: {
+            flex: "0",
+            align: "center",
+          },
+          styles: {
+            marginTop: "8px",
+          },
+          children: [
+            {
+              tag: "div",
+              properties: {
+                innerHTML: getString("readerpanel-history-label"),
+              },
+            },
+            {
+              tag: "button",
+              namespace: "xul",
+              attributes: {
+                label: getString("readerpanel-history-prev-label"),
+                flex: "1",
+              },
+              listeners: [
+                {
+                  type: "click",
+                  listener: (e: Event) => {
+                    const page_number_element = panel.querySelector(`#${makeId("history_page")}`) as HTMLDivElement;
+
+                    if (page_number_element == null) {
+                      return;
+                    }
+                    const page_number = Number(page_number_element!.innerHTML);
+
+                    const tasks = addon.data.translate.queue.filter((t) => t.status === "success").slice(page_number - 2);
+                    if (tasks.length !== -(page_number - 2)) {
+                      return;
+                    }
+
+                    const result_text_area = panel.querySelector(`#${makeId("resulttext")}`) as HTMLTextAreaElement;
+                    const raw_text_area = panel.querySelector(`#${makeId("rawtext")}`) as HTMLTextAreaElement;
+
+                    page_number_element.innerHTML = `${page_number - 1}`
+                    if (result_text_area != null) {
+                      result_text_area.value = tasks[0].result;
+                    }
+                    if (raw_text_area != null) {
+                      raw_text_area.value = tasks[0].raw;
+                    }
+                  },
+                },
+                ],
+            },
+            {
+              tag: "div",
+              id: makeId("history_page"),
+              properties: {
+                innerHTML: "0",
+              },
+            },
+            {
+              tag: "button",
+              namespace: "xul",
+              attributes: {
+                label: getString("readerpanel-history-next-label"),
+                flex: "1",
+              },
+              listeners: [
+                {
+                  type: "click",
+                  listener: (e: Event) => {
+                    const page_number_element = panel.querySelector(`#${makeId("history_page")}`) as HTMLDivElement;
+
+                    if (page_number_element == null) {
+                      return;
+                    }
+                    const page_number = Number(page_number_element!.innerHTML);
+                    if (page_number === 0) {
+                      return;
+                    }
+
+                    const tasks = addon.data.translate.queue.filter((t) => t.status === "success").slice(page_number);
+                    if (tasks.length !== -page_number) {
+                      return;
+                    }
+
+                    const result_text_area = panel.querySelector(`#${makeId("resulttext")}`) as HTMLTextAreaElement;
+                    const raw_text_area = panel.querySelector(`#${makeId("rawtext")}`) as HTMLTextAreaElement;
+
+                    page_number_element.innerHTML = `${page_number + 1}`
+                    if (result_text_area != null) {
+                      result_text_area.value = tasks[0].result;
+                    }
+                    if (raw_text_area != null) {
+                      raw_text_area.value = tasks[0].raw;
+                    }
+                  },
+                },
+                ],
+            },
+            ],
+        },
+
         {
           tag: "hbox",
           id: makeId("copy"),

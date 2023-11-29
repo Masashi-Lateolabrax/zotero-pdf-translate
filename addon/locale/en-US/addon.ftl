@@ -6,6 +6,9 @@ readerpanel-auto-annotation-label=Annotation
 readerpanel-concat-description-label=Selection: 
 readerpanel-concat-enable-label=Concat Mode
 readerpanel-concat-clear-label=Clear
+readerpanel-history-label=History:
+readerpanel-history-prev-label=Prev
+readerpanel-history-next-label=Next
 readerpanel-copy-description-label=Copy: 
 readerpanel-copy-raw-label=Raw
 readerpanel-copy-result-label=Result
@@ -44,6 +47,7 @@ service-collinsdict=Collins Dict(en↔zh)🔊
 service-youdaodict=Haici Dict(en↔zh)
 service-freedictionaryapi=FreeDictionaryAPI(en↔en)
 service-webliodict=weblio(en↔ja)
+service-cambridgedict=Cambridge Dictionary(en↔en)
 service-errorPrefix=[Request Error]\n\nEngine not available, invalid secret, or request too fast.\nUse another translation engine or post the issue here: \n https://github.com/windingwind/zotero-pdf-translate/issues \n\nThe message below is not Zotero or the PDF Translate addon, but from
 
 service-niutranspro-secret-pass=More...
