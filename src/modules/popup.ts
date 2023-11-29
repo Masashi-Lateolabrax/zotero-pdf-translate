@@ -4,7 +4,13 @@ import { getString } from "../utils/locale";
 import { getPref, setPref } from "../utils/prefs";
 import { addTranslateTask, getLastTranslateTask } from "../utils/task";
 import { slice } from "../utils/str";
-import { waitUtilAsync } from "../utils/wait";
+
+export declare type ReaderPopupEvent = Parameters<
+  _ZoteroTypes.Reader.ReaderEventHandler<
+    _ZoteroTypes.Reader.ReaderEventMap["renderTextSelectionPopup"],
+    "renderTextSelectionPopup"
+  >
+>[0];
 
 export function updateReaderPopup() {
   const popup = addon.data.popup.currentPopup;
@@ -75,26 +81,15 @@ export function updateReaderPopup() {
   updatePopupSize(popup, textarea);
 }
 
-export async function buildReaderPopup(
-  readerInstance: _ZoteroTypes.ReaderInstance,
-) {
-  await waitUtilAsync(
-    () =>
-      !!readerInstance._iframeWindow?.document.querySelector(
-        ".selection-popup",
-      ),
-  );
-  const popup = readerInstance._iframeWindow?.document.querySelector(
-    ".selection-popup",
-  ) as HTMLDivElement;
-  if (!popup) {
-    return;
-  }
+export function buildReaderPopup(event: ReaderPopupEvent) {
+  const { reader, doc, append } = event;
+  const annotation = event.params.annotation;
+  const popup = doc.querySelector(".selection-popup") as HTMLDivElement;
   addon.data.popup.currentPopup = popup;
-  popup.style.height = "-moz-fit-content";
+  popup.style.maxWidth = "none";
   popup.setAttribute(
     `${config.addonRef}-prefix`,
-    `${config.addonRef}-${readerInstance._instanceID}`,
+    `${config.addonRef}-${reader._instanceID}`,
   );
 
   const colors = popup.querySelector(".colors") as HTMLDivElement;
@@ -104,14 +99,12 @@ export async function buildReaderPopup(
   const keepSize = getPref("keepPopupSize") as boolean;
 
   const makeId = (type: string) =>
-    `${config.addonRef}-${readerInstance._instanceID}-${type}`;
+    `${config.addonRef}-${reader._instanceID}-${type}`;
 
-  const onTextAreaCopy = getOnTextAreaCopy(popup, makeId("text"));
   const hidePopupTextarea = getPref("enableHidePopupTextarea") as boolean;
 
-  ztoolkit.UI.appendElement(
-    {
-      tag: "fragment",
+  append(
+    ztoolkit.UI.createElement(doc, "fragment", {
       children: [
         {
           tag: "div",
@@ -135,7 +128,7 @@ export async function buildReaderPopup(
           },
           listeners: [
             {
-              type: "mouseup",
+              type: "click",
               listener: (ev: Event) => {
                 addon.hooks.onTranslate({ noCheckZoteroItemLanguage: true });
                 const button = ev.target as HTMLDivElement;
@@ -172,15 +165,12 @@ export async function buildReaderPopup(
               keepSize ? Number(getPref("popupHeight")) : 30,
             )}px`,
             marginLeft: "2px",
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            scrollbarWidth: "none",
           },
           properties: {
             onpointerup: (e: Event) => e.stopPropagation(),
             ondragstart: (e: Event) => e.stopPropagation(),
             spellcheck: false,
-            value: ztoolkit.Reader.getSelectedText(readerInstance).trim(),
+            value: addon.data.translate.selectedText,
           },
           ignoreIfExists: true,
           listeners: [
@@ -242,7 +232,7 @@ export async function buildReaderPopup(
           ignoreIfExists: true,
           listeners: [
             {
-              type: "mouseup",
+              type: "click",
               listener: async (ev) => {
                 const noteEditor =
                   ZoteroContextPane && ZoteroContextPane.getActiveEditor();
@@ -253,11 +243,9 @@ export async function buildReaderPopup(
                 if (!editorInstance) {
                   return;
                 }
-                const selection =
-                  ztoolkit.Reader.getSelectedText(readerInstance).trim();
                 const task = addTranslateTask(
-                  selection,
-                  readerInstance.itemID,
+                  addon.data.translate.selectedText,
+                  reader.itemID,
                   "text",
                 );
                 if (!task) {
@@ -271,35 +259,19 @@ export async function buildReaderPopup(
                   return;
                 }
                 const replaceMode = getPref("enableNoteReplaceMode") as boolean;
-                const { html } =
-                  Zotero.EditorInstanceUtilities.serializeAnnotations([
-                    {
-                      type: "highlight",
-                      text: replaceMode ? task.result : task.raw,
-                      comment: replaceMode ? "" : task.result,
-                      attachmentItemID: task.itemId,
-                      pageLabel:
-                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                        // @ts-ignore
-                        readerInstance._iframeWindow.wrappedJSObject.extractor
-                          .pageLabelsCache[readerInstance.state.pageIndex],
-                      position: {
-                        rects: [],
-                      },
-                    },
-                  ]);
-                editorInstance._postMessage({
-                  action: "insertHTML",
-                  pos: null,
-                  html,
-                });
+                if (replaceMode) {
+                  annotation.text = task.result;
+                } else {
+                  annotation.comment = task.result;
+                }
+                // @ts-ignore
+                reader._addToNote([annotation]);
               },
             },
           ],
         },
       ],
-    },
-    popup,
+    }),
   );
 }
 

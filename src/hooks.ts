@@ -7,13 +7,13 @@ import {
   registerReaderTabPanel,
   updateReaderTabPanels,
 } from "./modules/tabpanel";
-import { buildReaderPopup, updateReaderPopup } from "./modules/popup";
-import { registerNotify } from "./modules/notify";
 import {
-  checkReaderAnnotationButton,
-  registerReaderInitializer,
-  unregisterReaderInitializer,
-} from "./modules/reader";
+  ReaderPopupEvent,
+  buildReaderPopup,
+  updateReaderPopup,
+} from "./modules/popup";
+import { registerNotify } from "./modules/notify";
+import { registerReaderInitializer } from "./modules/reader";
 import { getPref, setPref } from "./utils/prefs";
 import {
   addTranslateAnnotationTask,
@@ -25,10 +25,7 @@ import {
 import { setDefaultPrefSettings } from "./modules/defaultPrefs";
 import Addon from "./addon";
 import { registerMenu } from "./modules/menu";
-import {
-  registerExtraColumns,
-  registerTitleRenderer,
-} from "./modules/itemTree";
+import { registerExtraColumns } from "./modules/itemTree";
 import { registerShortcuts } from "./modules/shortcuts";
 import { config } from "../package.json";
 import { registerItemBoxExtraRows } from "./modules/itemBox";
@@ -75,7 +72,6 @@ async function onMainWindowLoad(win: Window): Promise<void> {
   registerMenu();
   await registerExtraColumns();
   await registerItemBoxExtraRows();
-  registerTitleRenderer();
   registerShortcuts();
   registerPrompt();
 }
@@ -86,7 +82,6 @@ async function onMainWindowUnload(win: Window): Promise<void> {
 
 function onShutdown(): void {
   ztoolkit.unregisterAll();
-  unregisterReaderInitializer();
   // Remove addon object
   addon.data.alive = false;
   delete Zotero[config.addonInstance];
@@ -109,7 +104,6 @@ function onNotify(
     if (annotationItems.length === 0) {
       return;
     }
-    checkReaderAnnotationButton(annotationItems);
     if (getPref("enableComment")) {
       addon.hooks.onTranslateInBatch(
         annotationItems
@@ -192,26 +186,20 @@ async function onTranslateInBatch(
   }
 }
 
-async function onReaderTextSelection(
-  readerInstance: _ZoteroTypes.ReaderInstance,
-) {
-  const selection = ztoolkit.Reader.getSelectedText(readerInstance).trim();
+function onReaderPopupShow(event: ReaderPopupEvent) {
+  const selection = addon.data.translate.selectedText;
   const task = getLastTranslateTask();
   if (task?.raw === selection) {
-    await addon.hooks.onReaderPopupBuild(readerInstance);
+    buildReaderPopup(event);
     addon.hooks.onReaderPopupRefresh();
     return;
   }
-  addTranslateTask(selection, readerInstance.itemID);
-  await addon.hooks.onReaderPopupBuild(readerInstance);
+  addTranslateTask(selection, event.reader.itemID);
+  buildReaderPopup(event);
   addon.hooks.onReaderPopupRefresh();
   if (getPref("enableAuto")) {
     addon.hooks.onTranslate();
   }
-}
-
-async function onReaderPopupBuild(readerInstance: _ZoteroTypes.ReaderInstance) {
-  await buildReaderPopup(readerInstance);
 }
 
 function onReaderPopupRefresh() {
@@ -244,8 +232,7 @@ export default {
   onShortcuts,
   onTranslate,
   onTranslateInBatch,
-  onReaderTextSelection,
-  onReaderPopupBuild,
+  onReaderPopupShow,
   onReaderPopupRefresh,
   onReaderTabPanelRefresh,
   onSwitchTitleColumnDisplay,

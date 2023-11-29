@@ -109,6 +109,9 @@ The default engine is Google Translate. Currently, we support:
 
 > If the engine you want is not yet supported, please post an issue.
 
+**Google**
+Google does not require a secret, but you can put your own API URL in the secret to replace the default URL (translate.google.com/translate.googleapi.com).
+
 **Microsoft Translate**  
 Apply [here](https://docs.microsoft.com/en-us/azure/cognitive-services/translator/quickstart-translator?tabs=csharp). Copy your secret and paste it into the settings.  
 The secret format is `MY_SECRET`.
@@ -117,6 +120,7 @@ The secret format is `MY_SECRET`.
 
 **DeepL Translate**  
 Apply [here](https://www.deepl.com/pro?cta=header-prices/#developer).
+The secret format is `secretToken` or `secretToken#glossaryId` (if you want to specify some translate glossary).
 
 **Youdao Zhiyun Translate 有道智云**  
 Apply [here](https://ai.youdao.com/login.s).  
@@ -229,17 +233,9 @@ Use this code under AGPL. No warranties are provided. Keep the laws of your loca
 
 ## My Other Zotero Addons
 
-- [zotero-better-notes](https://github.com/windingwind/zotero-better-notes): Everything about note management. All in Zotero.
-- [zotero-pdf-preview](https://github.com/windingwind/zotero-tag): PDF preview for Zotero
-- [zotero-tag](https://github.com/windingwind/zotero-tag): Automatically tag items/Batch tagging
-
-## Sponsor Me
-
-I'm windingwind, an active [Zotero](https://www.zotero.org) plugin developer. Devoting to making reading papers easier.
-
-Sponsor me to buy a cup of coffee. I spend more than 24 hours every week coding, debugging, and replying to issues in my plugin repositories. The plugins are open-source and totally free.
-
-If you sponsor more than $10 a month, you can list your name/logo here and have priority for feature requests/bug fixes!
+- [Better Notes](https://github.com/windingwind/zotero-better-notes): Everything about note management. All in Zotero.
+- [Preview](https://github.com/windingwind/zotero-tag): PDF preview for Zotero
+- [Actions & Tags](https://github.com/windingwind/zotero-tag): Automatically tag items/Batch tagging
 
 ## Sponsors
 
@@ -248,3 +244,9 @@ Thanks
 and other anonymous sponsors!
 
 If you want to leave your name here, please email me or leave a message with the donation.
+
+## Contributors
+
+<a href="https://github.com/windingwind/zotero-pdf-translate/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=windingwind/zotero-pdf-translate" />
+</a>

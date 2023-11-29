@@ -4,7 +4,7 @@ import { LANG_CODE, SERVICES } from "../utils/config";
 import { getPref, setPref } from "../utils/prefs";
 import {
   addTranslateTask,
-  getTranslateTasks,
+  autoDetectLanguage,
   getLastTranslateTask,
   putTranslateTaskAtHead,
 } from "../utils/task";
@@ -136,6 +136,10 @@ function createPanel(ownerDeck: XUL.Deck, refID: string) {
 
 function buildPanel(panel: HTMLElement, refID: string, force: boolean = false) {
   const makeId = (type: string) => `${config.addonRef}-${refID}-panel-${type}`;
+  const itemID = Zotero.Reader._readers.find(
+    (reader) => reader._instanceID === refID,
+  )?._item?.id;
+  panel.setAttribute("item-id", String(itemID) || "");
   // Manually existance check to avoid unnecessary element creation with ...
   if (!force && panel.querySelector(`#${makeId("root")}`)) {
     return;
@@ -262,7 +266,11 @@ function buildPanel(panel: HTMLElement, refID: string, force: boolean = false) {
                 {
                   type: "command",
                   listener: (e: Event) => {
-                    setPref("sourceLanguage", (e.target as XUL.MenuList).value);
+                    const newValue = (e.target as XUL.MenuList).value;
+                    setPref("sourceLanguage", newValue);
+                    itemID &&
+                      (addon.data.translate.cachedSourceLanguage[itemID] =
+                        newValue);
                     addon.hooks.onReaderTabPanelRefresh();
                   },
                 },
@@ -1073,8 +1081,12 @@ function updatePanel(panel: HTMLElement) {
   updateHidden("copy", "showSidebarCopy");
 
   setValue("services", getPref("translateSource") as string);
-  setValue("langfrom", getPref("sourceLanguage") as string);
-  setValue("langto", getPref("targetLanguage") as string);
+
+  const { fromLanguage, toLanguage } = autoDetectLanguage(
+    Zotero.Items.get(panel.getAttribute("item-id") as string),
+  );
+  setValue("langfrom", fromLanguage);
+  setValue("langto", toLanguage);
 
   setCheckBox("autotrans", getPref("enableAuto") as boolean);
   setCheckBox("autoannot", getPref("enableComment") as boolean);

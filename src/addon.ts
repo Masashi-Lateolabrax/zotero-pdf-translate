@@ -23,15 +23,16 @@ class Addon {
     };
     popup: {
       currentPopup: HTMLDivElement | null;
-      observers: WeakRef<MutationObserver>[];
     };
     translate: {
+      selectedText: string;
       concatKey: boolean;
       concatCheckbox: boolean;
       queue: TranslateTask[];
       maximumQueueLength: number;
       batchTaskDelay: number;
       services: TranslationServices;
+      cachedSourceLanguage: Record<number, string>;
     };
   };
   // Lifecycle hooks
@@ -47,14 +48,16 @@ class Addon {
       locale: {},
       prefs: { window: null },
       panel: { tabOptionId: "", activePanels: [], windowPanel: null },
-      popup: { currentPopup: null, observers: [] },
+      popup: { currentPopup: null },
       translate: {
+        selectedText: "",
         concatKey: false,
         concatCheckbox: false,
         queue: [],
         maximumQueueLength: 100,
         batchTaskDelay: 1000,
         services: new TranslationServices(),
+        cachedSourceLanguage: {},
       },
     };
     this.hooks = hooks;
